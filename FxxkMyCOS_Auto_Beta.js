@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FxxkMyCOS_Auto
 // @namespace    https://github.com/GuestRyan/FxxkMyCOS
-// @version      a1.0
+// @version      a1.1
 // @author       para-lyze
 // @description  深圳技术大学教评全自动版：一键完成
 // @license      MIT
@@ -40,17 +40,22 @@ const config = {
     };
 
     const doWork = () => {
-        // 1. 只有在评价页面才执行填写逻辑
         if (window.location.href.includes(config.reviewHref)) {
+            
+            let hasUnfilled = false;
 
             // A. 自动填充单选
-            const unfilledRadios = $(".ant-radio-group").filter((i, el) => {
-                return $(el).find(".ant-radio-wrapper-checked, .ant-radio-checked").length === 0;
-            });
-            unfilledRadios.each((i, group) => {
-                const options = $(group).find(".ant-radio-wrapper");
-                const target = config.level;
-                if (options.eq(target).length) options.eq(target).trigger("click");
+            const allRadioGroups = $(".ant-radio-group");
+            allRadioGroups.each((i, group) => {
+                // 检查当前组是否已经有选中的选项
+                const isChecked = $(group).find(".ant-radio-wrapper-checked, .ant-radio-checked").length > 0;
+                
+                if (!isChecked) {
+                    hasUnfilled = true; 
+                    const options = $(group).find(".ant-radio-wrapper");
+                    const target = config.level;
+                    if (options.eq(target).length) options.eq(target).trigger("click");
+                }
             });
 
             // B. 自动填充多选
@@ -64,7 +69,7 @@ const config = {
             });
 
             // D. 自动点击“提交”按钮
-            if (config.autoSubmit) {
+            if (config.autoSubmit && !hasUnfilled && allRadioGroups.length > 0) {
                 const submitBtn = $('.ant-btn-primary').filter((i, el) => {
                     const text = $(el).text();
                     return text.includes("提 交") || text.includes("确 定") || text.includes("确定");
